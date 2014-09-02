@@ -14,7 +14,7 @@ module Puppet::Parser::Functions
 				      "dns_aaaa: Only accepts strings (you gave me #{name.inspect})"
 			end
 			
-			res.getresources(name, Resolv::DNS::Resource::IN::AAAA).map do |r|
+			res.getresources(name, Resolv::DNS::Resource::IN::AAAA).sort_by { |r| r.address.to_s }.map do |r|
 				r.address.to_s
 			end
 		end.flatten
