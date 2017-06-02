@@ -10,7 +10,7 @@ module Puppet::Parser::Functions
 		
 		arguments.flatten.map do |name|
 			unless name.is_a? String
-				raise Puppet::ParserError,
+				raise Puppet::ParseError,
 				      "dns_aaaa: Only accepts strings (you gave me #{name.inspect})"
 			end
 			
