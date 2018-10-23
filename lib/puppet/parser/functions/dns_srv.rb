@@ -3,9 +3,10 @@ module Puppet::Parser::Functions
     Retrieves DNS SRV records and returns it as an array.  Each record in
     the array will be an array of [priority, weight, port, target] arrays.
     Second argument is optional and can be either 'priority', 'weight',
-    'port', 'target', 'target:port'.  In that case, only the specified field
-    is returned; the special 'target:port' variant returns the target and
-    port joined with a colon.
+    'port', 'target', 'target:port', or 'target@port'.  In that case, only
+    the specified field is returned; the special 'target:port'/'target@port'
+    variants return the target and port joined with a colon or `@` symbol,
+    as appropriate.
   EOS
   ) do |arguments|
     require 'resolv'
@@ -20,6 +21,8 @@ module Puppet::Parser::Functions
         case arguments[1]
         when 'target:port'
           "#{res.target.to_s}:#{res.port}"
+        when 'target@port'
+          "#{res.target.to_s}@#{res.port}"
         when 'priority', 'weight', 'port'
           res.send(arguments[1])
         when 'target'
