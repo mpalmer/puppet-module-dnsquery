@@ -12,19 +12,26 @@ module Puppet::Parser::Functions
   EOS
   ) do |arguments|
     require 'resolv'
+    require 'digest/md5'
 
     raise(Puppet::ParseError, "dns_srv(): Wrong number of arguments " +
           "given (#{arguments.size} for 1 or 2)") if arguments.size < 1 or arguments.size > 2
 
     [].tap do |list|
-      left = Resolv::DNS.new.getresources(arguments[0],Resolv::DNS::Resource::IN::SRV)
+      # We want a stable order for our resolves both for consistency in the
+      # shuffling phase, and also so that the string we feed into the seed
+      # generator doesn't change from run to run.
+      left = Resolv::DNS.new.getresources(arguments[0], Resolv::DNS::Resource::IN::SRV)
+               .sort_by { |rr| [rr.target.to_s, rr.port] }
+      seed = Digest::MD5.hexdigest(self['::fqdn'] + left.inspect).hex
+      prng = Random.new(seed)
       until left.empty?
         prio = left.map { |rr| rr.priority }.uniq.min
         candidates = left.select { |rr| rr.priority == prio }
         left -= candidates
         candidates.sort_by! { |rr| [rr.weight, rr.target.to_s] }
         until candidates.empty?
-          selector = rand(candidates.inject(1) { |n, rr| n + rr.weight })
+          selector = prng.rand(candidates.inject(1) { |n, rr| n + rr.weight })
           chosen = candidates.inject(0) do |n, rr|
             break rr if n + rr.weight >= selector
             n + rr.weight
