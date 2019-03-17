@@ -23,7 +23,7 @@ module Puppet::Parser::Functions
       # generator doesn't change from run to run.
       left = Resolv::DNS.new.getresources(arguments[0], Resolv::DNS::Resource::IN::SRV)
                .sort_by { |rr| [rr.target.to_s, rr.port] }
-      seed = Digest::MD5.hexdigest(self['::fqdn'] + left.inspect).hex
+      seed = Digest::MD5.hexdigest(self['::fqdn'] + left.map { |rr| [rr.priority, rr.weight, rr.port, rr.target.to_s] }.inspect).hex
       prng = Random.new(seed)
       until left.empty?
         prio = left.map { |rr| rr.priority }.uniq.min
