@@ -37,7 +37,7 @@ module Puppet::Parser::Functions
             n + rr.weight
           end
           candidates.delete(chosen)
-          list << Target.new(chosen.target.to_s, chosen.port)
+          list << chosen
         end
       end
     end.map do |rr|
